@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Known product defects",
+    "matchedStatuses": ["failed"],
+    "messageRegex": "(?s).*Validation defect.*"
+  },
+  {
+    "name": "Element / locator problems",
+    "matchedStatuses": ["broken", "failed"],
+    "traceRegex": ".*(NoSuchElementException|StaleElementReferenceException|ElementNotInteractableException).*"
+  },
+  {
+    "name": "Timeouts / synchronisation",
+    "matchedStatuses": ["broken", "failed"],
+    "traceRegex": ".*TimeoutException.*"
+  },
+  {
+    "name": "Product assertion failures",
+    "matchedStatuses": ["failed"],
+    "messageRegex": "(?s)^(?!.*Validation defect).*",
+    "traceRegex": "(?s).*AssertionError.*"
+  }
+]

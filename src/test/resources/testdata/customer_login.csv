@@ -1,0 +1,5 @@
+customerName,expectedOutcome,description
+Harry Potter,should_pass,Existing customer with accounts can log in
+Hermoine Granger,should_pass,Second existing customer can log in
+Ron Weasly,should_pass,Third existing customer can log in
+Invalid User,should_fail,Unknown customer is not offered in the login list

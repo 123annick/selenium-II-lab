@@ -1,0 +1,12 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<!-- Everything, including tests that prove open defects (expected to fail until fixed) -->
+<suite name="XYZ Bank - Full" parallel="classes" thread-count="3">
+    <listeners>
+        <listener class-name="com.xyzbank.listeners.AllureTestListener"/>
+    </listeners>
+    <test name="Full">
+        <packages>
+            <package name="com.xyzbank.tests"/>
+        </packages>
+    </test>
+</suite>

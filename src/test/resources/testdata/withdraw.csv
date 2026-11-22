@@ -1,0 +1,6 @@
+initialDeposit,withdrawAmount,expectedOutcome,description
+100,50,should_pass,TC-051 Valid withdrawal updates balance
+100,100,should_pass,TC-052 Withdraw full balance (BVA on the limit)
+100,101,should_fail,TC-053 Withdraw balance + 1 (BVA just above)
+100,0,should_fail,TC-055 Zero withdrawal is not applied
+100,-10,should_fail,TC-056 Negative withdrawal is not applied

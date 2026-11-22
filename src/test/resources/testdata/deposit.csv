@@ -1,0 +1,6 @@
+amount,expectedOutcome,description
+100,should_pass,TC-043 Valid deposit updates balance
+1,should_pass,TC-047 Smallest whole deposit (BVA)
+1000000,should_pass,TC-050 Large deposit
+0,should_fail,TC-045 Zero deposit is not applied
+-50,should_fail,TC-046 Negative deposit is not applied

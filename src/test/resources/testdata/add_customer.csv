@@ -1,0 +1,11 @@
+firstName,lastName,postCode,expectedOutcome,description
+John,Smith,10001,should_pass,TC-001 Valid alphabetic names and numeric post code
+A,B,10005,should_pass,TC-011 Shortest valid names (one letter)
+Diana,Prince,250,should_pass,TC-015 Numeric-only post code
+John123,Smith,10001,should_fail,TC-007 Digits in first name
+Mary,Smith99,10002,should_fail,TC-008 Digits in last name
+J@hn!,Brown,10003,should_fail,TC-009 Special characters in first name
+Anna,Sm#th,10004,should_fail,TC-010 Special characters in last name
+Peter,Parker,ABCDE,should_fail,TC-012 Letters in post code
+Bruce,Wayne,12AB5,should_fail,TC-013 Letters and digits in post code
+Clark,Kent,12-34,should_fail,TC-014 Special characters in post code

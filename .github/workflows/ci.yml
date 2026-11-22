@@ -1,0 +1,123 @@
+name: XYZ Bank UI Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 3 * * 1-5"          # nightly full run (05:00 SAST)
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: "TestNG suite to run"
+        type: choice
+        options: [regression, smoke, full]
+        default: regression
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SUITE: ${{ github.event.inputs.suite || (github.event_name == 'schedule' && 'full') || 'regression' }}
+
+jobs:
+  # ---------------------------------------------------------------
+  # 1. Run the tests inside Docker against a Selenium Grid container
+  # ---------------------------------------------------------------
+  ui-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build test image and start Selenium
+        run: docker compose build
+
+      - name: Run ${{ env.SUITE }} suite in Docker
+        run: |
+          mkdir -p target/allure-results && chmod 777 target/allure-results
+          docker compose run --rm tests -Dsuite=${SUITE}
+
+      - name: Stop containers
+        if: always()
+        run: docker compose down -v
+
+      - name: Upload Allure results
+        if: always()                   # failed runs are the ones you most need to read
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results
+          path: target/allure-results
+          retention-days: 14
+
+  # ---------------------------------------------------------------
+  # 2. Build the Allure HTML report (with trend history) and publish it
+  # ---------------------------------------------------------------
+  allure-report:
+    needs: ui-tests
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Allure results
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-results
+          path: allure-results
+
+      - name: Restore previous report history (trend charts)
+        uses: actions/cache/restore@v4
+        with:
+          path: allure-history
+          key: allure-history-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: allure-history-${{ github.ref_name }}-
+
+      - name: Set up Java (needed by Allure CLI)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Generate Allure report
+        run: |
+          npm install -g allure-commandline@2.29.0
+          [ -d allure-history ] && cp -r allure-history allure-results/history || true
+          allure generate allure-results --clean -o allure-report
+          cp -r allure-report/history allure-history
+
+      - name: Save report history
+        uses: actions/cache/save@v4
+        with:
+          path: allure-history
+          key: allure-history-${{ github.ref_name }}-${{ github.run_id }}
+
+      - name: Upload Allure HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: allure-report
+
+      - name: Upload report for GitHub Pages
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: allure-report
+
+  deploy-report:
+    needs: allure-report
+    if: always() && github.ref == 'refs/heads/main' && needs.allure-report.result == 'success'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
