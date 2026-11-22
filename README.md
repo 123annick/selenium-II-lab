@@ -1,7 +1,32 @@
 # Test Automation with Selenium WebDriver II — XYZ Bank Lab
 
-**Author:** Annick  **Application under test:** [XYZ Bank App](https://www.globalsqa.com/angularJs-protractor/BankingProject/)
-**Stack:** Java 17 · Selenium WebDriver 4 · TestNG · Maven · Allure Report · Docker · GitHub Actions
+[![XYZ Bank UI Tests](https://github.com/123annick/selenium-II-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/123annick/selenium-II-lab/actions/workflows/ci.yml)
+
+| | |
+| --- | --- |
+| **Author** | Annick Ujeneza |
+| **Application under test** | [XYZ Bank App](https://www.globalsqa.com/angularJs-protractor/BankingProject/) |
+| **Allure report (live)** | https://123annick.github.io/selenium-II-lab/ |
+| **Jira / Xray (project TMLD4)** | Test Plan [TMLD4-104](https://amali-tech.atlassian.net/browse/TMLD4-104) · Test Execution [TMLD4-113](https://amali-tech.atlassian.net/browse/TMLD4-113) |
+| **Test plan** | [`docs/TEST_PLAN.md`](docs/TEST_PLAN.md) · Jira [TMLD4-104](https://amali-tech.atlassian.net/browse/TMLD4-104) |
+| **Manual testing evidence** | [`docs/`](docs/) — test workbook, Requirement & Defect Traceability Reports |
+| **Stack** | Java 17 · Selenium WebDriver 4 · TestNG · Maven · Allure Report · Docker · GitHub Actions |
+
+### Results at a glance
+
+| Run | Tests | Passed | Failed | Not run | Notes |
+| --- | --- | --- | --- | --- | --- |
+| Manual (Xray TMLD4-113) | 64 | 43 | 20 | 1 | 20 defects logged; TC-064 Firefox out of scope |
+| Automated – regression suite (CI gate) | 23 | 23 | 0 | 0 | Local, Docker and GitHub Actions |
+| Automated – full suite | 31 | 23 | 8 | 0 | The 8 failures prove known defects BUG-001…007 and BUG-012 |
+
+| Allure overview | Known defects in Allure |
+| --- | --- |
+| ![Allure overview](docs/screenshots/allure-overview.png) | ![Failed known-defect tests](docs/screenshots/allure-failed-test.png) |
+| **Behaviors (by user story)** | **Suites** |
+| ![Allure behaviors](docs/screenshots/allure-behaviors.png) | ![Allure suites](docs/screenshots/allure-suites.png) |
+| **Tests in Docker** | **GitHub Actions** |
+| ![Docker run](docs/screenshots/docker-run.png) | ![GitHub Actions run](docs/screenshots/github-actions-green.png) |
 
 ---
 
@@ -27,13 +52,15 @@
 
 | Metric | Score | Where it is covered |
 | --- | --- | --- |
-| Test plan document | 10 | [Section 2](#2-part-a--test-plan) |
+| Test plan document | 10 | [`docs/TEST_PLAN.md`](docs/TEST_PLAN.md) and [Section 2](#2-part-a--test-plan) |
 | Set up, folder structure (POM), test data, GitHub Actions CI, Docker | 70 | Sections [4](#4-part-c--test-automation-framework), [5](#5-practice-task-1--pom-refactor), [6](#6-practice-task-2--data-driven-tests-from-csv), [8](#8-containerization-with-docker), [9](#9-cicd-with-github-actions) |
 | Test report with Allure | 20 | [Section 7](#7-practice-task-3--advanced-reporting-with-allure) |
 
 ---
 
 ## 2. Part A — Test Plan
+
+> Standalone version of this plan: **[docs/TEST_PLAN.md](docs/TEST_PLAN.md)**
 
 > Format based on IEEE 829 / ISO/IEC/IEEE 29119-3, trimmed to what this project needs.
 
@@ -100,7 +127,7 @@ Requirement IDs, test case IDs and Jira keys are the same as in the manual-testi
 
 | Level / type | How |
 | --- | --- |
-| Manual functional testing | 63 scripted test cases managed in Jira Xray — see [Section 3](#3-part-b--manual-testing) |
+| Manual functional testing | 64 scripted test cases managed in Jira Xray (63 executed) — see [Section 3](#3-part-b--manual-testing) |
 | Automated UI regression | Selenium WebDriver 4 + TestNG, Page Object Model |
 | Data-driven testing | CSV files → TestNG `@DataProvider` (valid, boundary and negative values) |
 | Test design techniques | Equivalence partitioning (valid / invalid names, amounts), boundary values (0, 1, exact balance, balance + 1), state transition (customer → account → deleted) |
@@ -181,17 +208,19 @@ Techniques used: equivalence partitioning (valid/invalid names, post codes, amou
 
 ### 3.1 Execution summary
 
-| Test suite | Total | Pass | Fail |
-| --- | --- | --- | --- |
-| TS-01 Manager: Add Customer | 15 | 8 | 7 |
-| TS-02 Manager: Open Account | 8 | 8 | 0 |
-| TS-03 Manager: Delete Account | 6 | 4 | 2 |
-| TS-04 Login and Access | 6 | 4 | 2 |
-| TS-05 Customer: Transactions | 7 | 6 | 1 |
-| TS-06 Customer: Deposit | 8 | 5 | 3 |
-| TS-07 Customer: Withdraw | 9 | 6 | 3 |
-| TS-08 Non-functional | 4 | 2 | 2 |
-| **Total** | **63** | **43 (68 %)** | **20 (32 %)** |
+| Test suite | Total | Pass | Fail | Not run |
+| --- | --- | --- | --- | --- |
+| TS-01 Manager: Add Customer | 15 | 8 | 7 | 0 |
+| TS-02 Manager: Open Account | 8 | 8 | 0 | 0 |
+| TS-03 Manager: Delete Account | 6 | 4 | 2 | 0 |
+| TS-04 Login and Access | 6 | 4 | 2 | 0 |
+| TS-05 Customer: Transactions | 7 | 6 | 1 | 0 |
+| TS-06 Customer: Deposit | 8 | 5 | 3 | 0 |
+| TS-07 Customer: Withdraw | 9 | 6 | 3 | 0 |
+| TS-08 Non-functional | 5 | 2 | 2 | 1 |
+| **Total** | **64** | **43** | **20** | **1** |
+
+Pass rate of executed tests: 43 of 63 (68 %). TC-064 (Firefox, Xray TMLD4-60) is kept in Xray but not run: Firefox is out of scope for this cycle (Test Plan TMLD4-104, section 9), so REQ-18 shows NOT RUN in the Requirement Traceability Report.
 
 ### 3.2 Defects found
 
@@ -222,7 +251,7 @@ Techniques used: equivalence partitioning (valid/invalid names, post codes, amou
 
 - **Zero and negative amounts** (BUG-017 to BUG-020): the app moves no money and records no transaction, but shows no message. The automated deposit and withdraw tests therefore check that the **balance is unchanged and no success message appears** — these rows pass. The missing message stays a logged defect.
 - **Invalid names and post codes** (BUG-001 to BUG-007) and **Reset** (BUG-012) are automated in the `known-defect` group and linked to their Jira bugs with `@Issue`, so they show in the nightly report without blocking the CI gate.
-- **New transactions sometimes need a refresh** before they appear (TC-037). `TransactionsPage.waitForTransactions()` leaves and re-opens the view until the rows appear.
+- **New transactions sometimes do not appear** (manual note in TC-037). Automation found the cause in the app's `date.search.filter.js`: the start/end date filters are pre-filled with times that include milliseconds, the `datetime-local` inputs only accept whole seconds, so the values become invalid and the filter `date >= start && date <= end` hides every row. `TransactionsPage.waitForTransactions()` widens the date range so the test can verify the transactions. Candidate defect **BUG-021** (Medium, REQ-08).
 - **Authentication, confirmation dialogs, decimals and styling** (BUG-008 to BUG-011, BUG-013 to BUG-016) stay manual: they are missing features or visual checks, not regressions a UI script should guard.
 - The automated CSV data uses the **same values as the manual test cases** (e.g. `John123`, `Sm#th`, `12AB5`, `100`/`101` for withdrawal boundaries).
 
