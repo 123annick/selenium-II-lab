@@ -2551,28 +2551,21 @@ mvn allure:serve                                 # open the Allure report
 
 ### 11.1 Prioritization challenge — POM or data-driven testing first?
 
-**My choice: the Page Object Model.**
+I would get the **Page Object Model** right first.
 
-1. **POM limits the cost of the most common change — the UI.** Over a year, screens change often (a renamed button, a new form). With POM a locator lives in one place. With 300 tests that each use the Deposit button, a change costs **one edit instead of 300**. Data-driven testing does not help here: if locators are inside test methods, every data-driven test still breaks.
-2. **Data-driven testing depends on POM, not the other way round.** A data-driven test is "same steps, different data". The *same steps* are exactly the reusable page methods (`loginAs`, `deposit`, `withdraw`). Without POM, each data-driven test copies the WebDriver code again.
-3. **Adding data-driven testing later is cheap; adding POM later is expensive.** Converting a clean test to use `@DataProvider` + CSV is a small, local change (one annotation, one parameter list). Retro-fitting POM onto hundreds of script-style tests is a rewrite.
-4. **Test volume.** As test count grows, the maintenance cost of duplicated UI code grows linearly with it. POM keeps that cost close to constant. Data-driven testing grows *coverage* (more cases per test) but does not reduce maintenance.
+In a big project the thing that changes most often is the user interface. Buttons get renamed, forms move, new fields appear. With POM, every locator lives in one page class, so when the Deposit button changes I fix it once in `AccountPage` and every test that deposits money keeps working. Without POM, the same locator is copied into dozens of tests and one UI change can break all of them. Over a year, that is where most of the maintenance time goes.
 
-So: get POM right from day one (clear layers, stable locators, explicit waits in one base class), and add data-driven inputs where a flow really needs many data combinations — which, in this project, took only one reader class and a few CSV files.
+Data-driven testing is important too, but it sits on top of POM. A data-driven test runs the same steps with different values, and those steps are exactly the page methods like `loginAs()`, `deposit()` and `withdraw()`. If the page objects are clean, adding a CSV file is easy: in this project it was one reader class, one data provider and a few CSV files. Going the other way is much harder. Adding POM later to hundreds of tests that already contain raw WebDriver code means rewriting them.
 
-### 11.2 Reporting goal — one thing (beyond pass/fail) for a non-technical Product Owner
+So POM controls the cost of maintenance as the number of tests grows, while data-driven testing increases coverage. I would build the POM properly from day one and add data-driven tests wherever a flow needs many input combinations, like deposits, withdrawals and customer validation in this lab.
 
-**Results grouped by user story and feature (Allure *Behaviors* view, with severity).**
+### 11.2 Reporting goal — one piece of information for a non-technical Product Owner
 
-A Product Owner thinks in user stories, not in Java classes. Allure's Behaviors tab shows `XYZ Bank → Customer – Withdraw → "Withdrawal amount is validated and balance updated"` with its result, severity and a link to the test case. From that one screen they can answer the questions they care about:
+The most useful thing for a Product Owner is seeing **results grouped by user story, with severity** — the Behaviors view in Allure.
 
-- *Which acceptance criteria are met and which are not?* (e.g. "Customer cannot reset transaction history" — failed, Critical, linked to Jira bug TMLD4-95)
-- *Is a failure a release blocker?* (Severity: Blocker / Critical vs. Minor)
-- *What happened?* The plain-language **steps** ("Log in as customer 'Harry Potter'", "Withdraw 600") plus the **screenshot** show the problem without reading code.
+A Product Owner does not think in Java classes; they think in features and acceptance criteria. In my report they can open *Customer – Transactions* and see straight away that "Customer cannot reset transaction history" failed, that it is marked Critical, and that it links to the Jira bug TMLD4-95. The steps are written in plain language ("Log in as customer 'Harry Potter'", "Click 'Reset'") and there is a screenshot, so they understand the problem without reading any code.
 
-Combined with the **trend graph**, the PO can also see whether quality is improving from build to build, and make the go / no-go decision.
-
----
+That lets them answer the questions they actually care about: which acceptance criteria are met, which are not, and whether a failure should stop the release. Together with the trend graph, they can also see if quality is getting better from one build to the next.
 
 ## 12. Best Practices Checklist
 
