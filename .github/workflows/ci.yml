@@ -41,10 +41,20 @@ jobs:
       - name: Build test image and start Selenium
         run: docker compose build
 
-      - name: Run ${{ env.SUITE }} suite in Docker
+      # Quality gate: the job fails only if THIS suite fails (regression by default)
+      - name: Run ${{ env.SUITE }} suite in Docker (quality gate)
         run: |
           mkdir -p target/allure-results && chmod 777 target/allure-results
           docker compose run --rm tests -Dsuite=${SUITE}
+
+      # Published report: run the FULL suite (incl. known-defect tests) so the Allure
+      # report always shows every test and the open defects. Its failures are expected,
+      # so they do not fail the build.
+      - name: Run full suite for the published Allure report
+        if: always() && env.SUITE != 'full'
+        run: |
+          sudo rm -rf target/allure-results/*
+          docker compose run --rm tests -Dsuite=full -Dmaven.test.failure.ignore=true
 
       - name: Stop containers
         if: always()

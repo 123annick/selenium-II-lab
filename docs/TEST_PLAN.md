@@ -16,14 +16,13 @@ This plan describes how the XYZ Bank web application will be tested, manually an
 
 *The goals of testing – what we want to prove works.*
 
-| Objective      | Detail                                                                                                                                                                                  | Meaning                                          |
-|----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------|
-| Functional     | Confirm a bank manager can add customers, open accounts and delete accounts; confirm a customer can log in, view transactions, deposit and withdraw, and that balances update correctly | Does each feature do what it should?             |
-| Validation     | Confirm names accept letters only, post codes digits only, and amounts must be positive with sufficient balance                                                                         | Does the app reject wrong input?                 |
-| Security       | Confirm customers cannot reset or alter their transaction history and cannot use an account before it is created or after it is deleted                                                 | Is money and history protected?                  |
-| Non-functional | Confirm core flows work on Chrome and Edge and on a phone-size screen                                                                                                                   | Does it work for different users and devices?    |
-| Automation     | Build a maintainable Selenium WebDriver framework (Page Object Model, data-driven tests), run it in Docker and in a CI pipeline, and publish an Allure report                           | Can the checks be repeated quickly and reliably? |
-| Business goal  | Give stakeholders confidence that customers' money and records are handled correctly, and clear information to decide on release                                                        | Why this matters to the bank                     |
+| Objective          | Detail                                                                                                                                                                                  | Meaning                                          |
+|--------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------|
+| Functional         | Confirm a bank manager can add customers, open accounts and delete accounts; confirm a customer can log in, view transactions, deposit and withdraw, and that balances update correctly | Does each feature do what it should?             |
+| Validation         | Confirm names accept letters only, post codes digits only, and amounts must be positive with sufficient balance                                                                         | Does the app reject wrong input?                 |
+| Access and history | Confirm customers cannot reset or alter their transaction history and cannot use an account before it is created or after it is deleted                                                 | Is money and history protected?                  |
+| Automation         | Build a maintainable Selenium WebDriver framework (Page Object Model, data-driven tests), run it in Docker and in a CI pipeline, and publish an Allure report                           | Can the checks be repeated quickly and reliably? |
+| Business goal      | Give stakeholders confidence that customers' money and records are handled correctly, and clear information to decide on release                                                        | Why this matters to the bank                     |
 
 ## 3. Scope
 
@@ -31,37 +30,39 @@ This plan describes how the XYZ Bank web application will be tested, manually an
 
 ### In scope
 
-- Bank Manager – Add Customer: valid data, mandatory fields, duplicate customers, letters-only names, digits-only post code
-- Bank Manager – Open Account: account creation per currency for an existing customer, mandatory selections, account shown in the customer list
-- Bank Manager – Delete Account: deleting customers and accounts, search, access after deletion
-- Customer – Login and Logout, access with and without an account, switching between own accounts
-- Customer – Transactions: viewing recent transactions, credits and debits shown correctly, history cannot be reset or edited
-- Customer – Deposit and Withdraw: amount entry, validation (positive value, sufficient balance), balance update
-- Compatibility: Chrome (primary), Edge, phone-size screen; labels and messages
-- Test automation of the regression set, execution in Docker, CI pipeline and Allure reporting
+- Bank Manager – Add Customer: adding new customers; names contain letters only; post codes contain digits only
+- Bank Manager – Open Account: creating accounts for customers already in the system; customers cannot access their accounts until an account is created
+- Bank Manager – Delete Account: deleting customer accounts; a deleted customer can no longer access the account
+- Customer – Login and Logout (from the project overview)
+- Customer – Transactions: viewing a list of recent transactions
+- Customer – Deposit: entering the amount, validation (positive value), balance update
+- Customer – Withdraw: entering the amount, validation (positive value, sufficient balance), balance update
+- Customer – Transaction security: transaction history cannot be reset or altered
+- Test automation of these features, execution in Docker, CI pipeline and Allure reporting
 
 ### Out of scope
 
-- Firefox and Safari
+- Features not described in the two user stories (for example manager authentication and the date-range filter on the Transactions page)
+- Cross-browser and mobile compatibility – testing uses Google Chrome
+- UI styling and wording checks
 - Performance, load and stress testing
 - Penetration testing (only the access and history rules from the user stories are checked)
 - Back-end or API testing – the demo app has no real back end
 - Full accessibility audit and localisation
-- The transactions date-range filter as a feature in its own right
 
-Reason: these are not covered by the two user stories, or need tools, access or time beyond this test cycle.
+Reason: these are not covered by the two user stories in the lab brief, or need tools, access or time beyond this test cycle.
 
 ## 4. Test Coverage
 
-*The parts of the application that will be tested, taken from the two user stories in the lab brief.*
+*The parts of the application that will be tested, taken from the lab brief: the two user stories and customer login from the project overview.*
 
 | User                        | Area of the app      | What will be covered                                                                       |
 |-----------------------------|----------------------|--------------------------------------------------------------------------------------------|
 | Bank Manager (User Story 1) | Add Customer         | Adding new customers and validation of the customer form (names and post code)             |
 |                             | Open Account         | Creating accounts for customers already in the system, and access before an account exists |
-|                             | Customers / Delete   | Finding and deleting customer accounts, and access after deletion                          |
-| Customer (User Story 2)     | Login and Logout     | Customer access to their own accounts                                                      |
-|                             | Transactions         | Viewing recent transactions                                                                |
+|                             | Delete Account       | Deleting customer accounts, and access after deletion                                      |
+| Customer (project overview) | Login and Logout     | Customer access to their own accounts                                                      |
+| Customer (User Story 2)     | Transactions         | Viewing recent transactions                                                                |
 |                             | Deposit              | Entering and validating deposit amounts, and balance update                                |
 |                             | Withdraw             | Entering and validating withdrawal amounts, sufficient balance, and balance update         |
 |                             | Transaction security | Customers cannot reset or alter their transaction history                                  |
@@ -75,14 +76,14 @@ Coverage is tracked during test design: every acceptance criterion is linked to 
 | Area              | Approach                                                                                                                                                                                                                                                                                                                                                                    | Meaning                                                                                                                |
 |-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
 | Test levels       | System testing of the whole web app, plus acceptance-style checks against each acceptance criterion                                                                                                                                                                                                                                                                         | How big a piece is tested at once. System testing means testing the whole website together                             |
-| Test types        | Functional (positive and negative), input validation, access and history security, UI and wording, compatibility, automated regression                                                                                                                                                                                                                                      | The kinds of checks: does it work, does it reject bad input, is it safe                                                |
+| Test types        | Functional (positive and negative), input validation, access and history rules, automated regression                                                                                                                                                                                                                                                                        | The kinds of checks: does it work, does it reject bad input, is it safe                                                |
 | Techniques        | Black-box requirement-based testing (at least one test per acceptance criterion); equivalence partitioning for names, post codes and amounts (letters, digits, special characters); boundary values for amounts (zero, smallest valid amount, exact balance, balance plus one); state transition (customer → account → deleted); exploratory sessions on history and access | Equivalence partitioning: one test per group of similar inputs. Boundary values: testing at the edges, where bugs hide |
 | Manual testing    | Test cases are designed from the requirements, stored in the test management tool, linked to their requirement and executed in a test execution cycle with a result, comment and screenshot per run                                                                                                                                                                         | A person runs each test and records what happened                                                                      |
 | Automation        | Java, Selenium WebDriver, TestNG and Maven. Page Object Model: one class per screen with locators and actions; tests contain only logic and assertions. Explicit waits only. A fresh browser per test so tests do not depend on each other. Data-driven tests read their inputs from CSV files, reusing the data designed for the manual tests                              | A program repeats the checks quickly; POM keeps the code easy to maintain when the screens change                      |
 | Test suites       | Smoke (a quick check of the core flows), Regression (the CI quality gate), Full (everything, including tests that track open defects)                                                                                                                                                                                                                                       | Groups of tests run for different purposes                                                                             |
 | Containers and CI | Automated tests run in a Docker container against a Selenium Grid browser container. A CI pipeline runs the suite on every change, nightly and on demand, then publishes the Allure report                                                                                                                                                                                  | The same environment everywhere, and results on every change                                                           |
 | Reporting         | Allure: steps per test, screenshot on failure, severity, links to tests and defects in the test management tool, failure categories, trend history                                                                                                                                                                                                                          | Clear results for engineers and non-technical readers                                                                  |
-| Risk analysis     | High: money moving without validation, history that can be changed, functions reachable without the right role. Medium: wrong balance after a transaction, invalid customer data stored. Low: wording and styling. High-risk areas are tested first and deepest                                                                                                             | Thinking ahead about what could go wrong, and testing the riskiest things first                                        |
+| Risk analysis     | High: money moving without validation, transaction history that can be changed, customers reaching accounts that do not exist or were deleted. Medium: wrong balance after a transaction, invalid customer data stored. High-risk areas are tested first and deepest                                                                                                        | Thinking ahead about what could go wrong, and testing the riskiest things first                                        |
 
 ### Project risks and mitigations
 
@@ -111,13 +112,13 @@ Coverage is tracked during test design: every acceptance criterion is linked to 
 
 *WHERE testing happens – the computer, browser, website and example data used.*
 
-| Item          | Detail                                                                                                                                                                                                                                                                                             | Meaning                                        |
-|---------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------|
-| Hardware / OS | Desktop PC with Windows (manual and local automated runs); Linux runners for the CI pipeline                                                                                                                                                                                                       | The computer and its operating system          |
-| Browsers      | Google Chrome, latest stable (primary); Microsoft Edge; browser device mode for a phone-size screen; Chrome in a Selenium Grid container for CI                                                                                                                                                    | The programs used to open the website          |
-| Network / URL | Public internet; https://www.globalsqa.com/angularJs-protractor/BankingProject/#/login                                                                                                                                                                                                             | The internet connection and web address        |
-| Test data     | Customers pre-loaded in the demo app; new customers created during testing; valid and invalid names (letters, digits, special characters); valid and invalid post codes; amounts covering valid, zero, negative, decimal and boundary values. The full data per test is defined during test design | The example information typed into the website |
-| Data reset    | The app keeps its data in the browser, so a new browser session starts from the pre-loaded data                                                                                                                                                                                                    | Tests do not affect each other                 |
+| Item          | Detail                                                                                                                                                                                                                                                                                    | Meaning                                        |
+|---------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------|
+| Hardware / OS | Desktop PC with Windows (manual and local automated runs); Linux runners for the CI pipeline                                                                                                                                                                                              | The computer and its operating system          |
+| Browsers      | Google Chrome, latest stable (manual and local automated runs); Chrome in a Selenium Grid container for CI                                                                                                                                                                                | The program used to open the website           |
+| Network / URL | Public internet; https://www.globalsqa.com/angularJs-protractor/BankingProject/#/login                                                                                                                                                                                                    | The internet connection and web address        |
+| Test data     | Customers pre-loaded in the demo app; new customers created during testing; valid and invalid names (letters, digits, special characters); valid and invalid post codes; amounts covering valid, zero, negative and boundary values. The full data per test is defined during test design | The example information typed into the website |
+| Data reset    | The app keeps its data in the browser, so a new browser session starts from the pre-loaded data                                                                                                                                                                                           | Tests do not affect each other                 |
 
 ## 8. Tools
 
