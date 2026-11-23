@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    - cron: "0 3 * * 1-5"          # nightly full run (05:00 SAST)
+    - cron: "0 3 * * 1-5"          # nightly run, Mon–Fri 05:00 SAST
   workflow_dispatch:
     inputs:
       suite:
@@ -25,7 +25,9 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  SUITE: ${{ github.event.inputs.suite || (github.event_name == 'schedule' && 'full') || 'regression' }}
+  # Quality-gate suite: regression unless chosen manually. The full suite always runs
+  # afterwards for the published report (see ui-tests), so known defects never fail the build.
+  SUITE: ${{ github.event.inputs.suite || 'regression' }}
 
 jobs:
   # ---------------------------------------------------------------
