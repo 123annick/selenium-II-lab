@@ -1,153 +1,240 @@
-# Test Plan — XYZ Bank Web Application
+# Test Plan – XYZ Bank
 
-| | |
-| --- | --- |
-| **Document** | Test Plan `TP-XYZBANK-001`, version 1.2 |
-| **Project** | XYZ Bank — Test Automation with Selenium WebDriver II |
-| **Author** | Annick Ujeneza, QA Engineer |
-| **Date** | 22 Nov 2026 |
-| **Status** | Final — submitted for review |
-| **Related** | Jira/Xray Test Plan [TMLD4-104](https://amali-tech.atlassian.net/browse/TMLD4-104) (manual cycle) · Test Execution [TMLD4-113](https://amali-tech.atlassian.net/browse/TMLD4-113) · [Test workbook and Xray reports](./) · [Automation framework and results](../README.md) · [Live Allure report](https://123annick.github.io/selenium-II-lab/) |
+## 1. Introduction
 
-> Format based on IEEE 829 / ISO/IEC/IEEE 29119-3, trimmed to what this project needs.
+*What is being tested and why this document exists. A test plan is the "game plan" for testing: what we test, how, who does it, when, and when we stop.*
 
-## 1. Test plan identifier
+This plan describes how the XYZ Bank web application will be tested, manually and with automation, so that the Bank Manager features (add customer, open account, delete account) and the Customer features (login, transactions, deposit, withdraw) meet the acceptance criteria of the user stories. Test cases, the requirement traceability matrix and the defect log will be produced during the test cycle and kept in the test management tool and a companion workbook.
 
-`TP-XYZBANK-001` — version 1.2 (1.0 initial plan · 1.1 aligned with Jira Xray results · 1.2 automation, Docker, CI and Allure added)
+| Item                         | Detail                                                                                                                                       | Meaning                                   |
+|------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------|
+| Purpose                      | Describe the scope, approach, resources, schedule and exit rules for testing XYZ Bank, both manual and automated                             | Why we are testing                        |
+| Application under test (AUT) | XYZ Bank – https://www.globalsqa.com/angularJs-protractor/BankingProject/ (public AngularJS demo banking app; data is stored in the browser) | The website being tested                  |
+| Source of requirements       | Lab brief "Test Automation with Selenium WebDriver II": User Story 1 (Bank Manager) and User Story 2 (Customer)                              | Where the rules we test against come from |
 
-## 2. Introduction
+## 2. Test Objectives
 
-The XYZ Bank app is an AngularJS single-page banking demo with two roles:
+*The goals of testing – what we want to prove works.*
 
-- **Bank Manager** — add customers, open accounts, list/search/delete customers.
-- **Customer** — log in by choosing their name, view transactions, deposit, withdraw.
+| Objective      | Detail                                                                                                                                                                                  | Meaning                                          |
+|----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------|
+| Functional     | Confirm a bank manager can add customers, open accounts and delete accounts; confirm a customer can log in, view transactions, deposit and withdraw, and that balances update correctly | Does each feature do what it should?             |
+| Validation     | Confirm names accept letters only, post codes digits only, and amounts must be positive with sufficient balance                                                                         | Does the app reject wrong input?                 |
+| Security       | Confirm customers cannot reset or alter their transaction history and cannot use an account before it is created or after it is deleted                                                 | Is money and history protected?                  |
+| Non-functional | Confirm core flows work on Chrome and Edge and on a phone-size screen                                                                                                                   | Does it work for different users and devices?    |
+| Automation     | Build a maintainable Selenium WebDriver framework (Page Object Model, data-driven tests), run it in Docker and in a CI pipeline, and publish an Allure report                           | Can the checks be repeated quickly and reliably? |
+| Business goal  | Give stakeholders confidence that customers' money and records are handled correctly, and clear information to decide on release                                                        | Why this matters to the bank                     |
 
-This plan describes how the app will be tested manually and automatically against User Story 1 (Bank Manager) and User Story 2 (Customer).
+## 3. Scope
 
-## 3. Objectives
+*The boundary of testing – what we WILL test (in scope) and what we will NOT test (out of scope).*
 
-1. Verify every acceptance criterion of User Stories 1 and 2.
-2. Find and report defects, especially in input validation and transaction security.
-3. Build a maintainable Selenium WebDriver framework (Page Object Model, data-driven tests).
-4. Run the suite in Docker and in a GitHub Actions CI pipeline on every push / pull request.
-5. Publish an Allure report that both engineers and non-technical stakeholders can read.
+### In scope
 
-## 4. Scope
+- Bank Manager – Add Customer: valid data, mandatory fields, duplicate customers, letters-only names, digits-only post code
+- Bank Manager – Open Account: account creation per currency for an existing customer, mandatory selections, account shown in the customer list
+- Bank Manager – Delete Account: deleting customers and accounts, search, access after deletion
+- Customer – Login and Logout, access with and without an account, switching between own accounts
+- Customer – Transactions: viewing recent transactions, credits and debits shown correctly, history cannot be reset or edited
+- Customer – Deposit and Withdraw: amount entry, validation (positive value, sufficient balance), balance update
+- Compatibility: Chrome (primary), Edge, phone-size screen; labels and messages
+- Test automation of the regression set, execution in Docker, CI pipeline and Allure reporting
 
-| In scope | Out of scope |
-| --- | --- |
-| Customer login / logout | Performance, load and stress testing |
-| Add customer (incl. name and post-code validation) | Security / penetration testing (only the "cannot reset history" rule is tested) |
-| Open account (Dollar, Pound, Rupee) | Back-end / API testing (the app has no real back end; data lives in browser localStorage) |
-| Customers list: search, delete | Accessibility audit, localisation |
-| Deposit, withdraw, balance update | Mobile native apps |
-| Transactions list and transaction-history integrity | Date-range filter on the Transactions page |
-| Compatibility: Chrome (primary), Edge, phone-size screen (375 × 667) | Firefox, Safari |
+### Out of scope
 
-## 5. Features to be tested (traceability)
+- Firefox and Safari
+- Performance, load and stress testing
+- Penetration testing (only the access and history rules from the user stories are checked)
+- Back-end or API testing – the demo app has no real back end
+- Full accessibility audit and localisation
+- The transactions date-range filter as a feature in its own right
 
-Requirement IDs, test case IDs and Jira keys are the same as in the manual-testing workbook (`XYZ_Bank_Test_Workbook.xlsx`) and in Jira project **TMLD4** with Xray (test plan [TMLD4-104](https://amali-tech.atlassian.net/browse/TMLD4-104), test execution [TMLD4-113](https://amali-tech.atlassian.net/browse/TMLD4-113)). Coverage status comes from the Xray *Requirement Traceability Report*: **7 OK, 11 NOK, 1 NOT RUN** out of 19 requirements. Automated tests link to the same Xray keys with `@TmsLink`, so manual and automated results trace to the same requirements.
+Reason: these are not covered by the two user stories, or need tools, access or time beyond this test cycle.
 
-| Req ID | Jira key | Requirement | Manual test cases | Coverage status (Xray) | Automated (class → Xray key) |
-| --- | --- | --- | --- | --- | --- |
-| REQ-01 | [TMLD4-65](https://amali-tech.atlassian.net/browse/TMLD4-65) | Manager can add a new customer | TC-001 – TC-006 | OK | `AddCustomerTest` → TMLD4-1 |
-| REQ-02 | [TMLD4-66](https://amali-tech.atlassian.net/browse/TMLD4-66) | Names: alphabetic characters only | TC-007 – TC-011 | NOK | `AddCustomerTest` → TMLD4-7 |
-| REQ-03 | [TMLD4-67](https://amali-tech.atlassian.net/browse/TMLD4-67) | Post code: numeric characters only | TC-012 – TC-015 | NOK | `AddCustomerTest` → TMLD4-7 |
-| REQ-04 | [TMLD4-68](https://amali-tech.atlassian.net/browse/TMLD4-68) | Manager can create an account for an existing customer | TC-016 – TC-021 | OK | `AccountManagementTest` → TMLD4-16 |
-| REQ-05 | [TMLD4-69](https://amali-tech.atlassian.net/browse/TMLD4-69) | No access until an account is created | TC-022, TC-023 | OK | `AccountManagementTest` → TMLD4-22, TMLD4-23 |
-| REQ-06 | [TMLD4-70](https://amali-tech.atlassian.net/browse/TMLD4-70) | Manager can delete customer accounts | TC-024 – TC-026, TC-029 | NOK | `AccountManagementTest` → TMLD4-24 |
-| REQ-07 | [TMLD4-71](https://amali-tech.atlassian.net/browse/TMLD4-71) | Deleted customer can no longer access the account | TC-027, TC-028 | OK | `AccountManagementTest` → TMLD4-24 |
-| REQ-08 | [TMLD4-72](https://amali-tech.atlassian.net/browse/TMLD4-72) | Customer can view recent transactions | TC-036 – TC-040 | OK | `TransactionTest` → TMLD4-31 |
-| REQ-09 | [TMLD4-73](https://amali-tech.atlassian.net/browse/TMLD4-73) | Customer can enter a deposit amount | TC-044, TC-049 | NOK | — (browser validation) |
-| REQ-10 | [TMLD4-74](https://amali-tech.atlassian.net/browse/TMLD4-74) | Deposit amount validated (positive value) | TC-045 – TC-048 | NOK | `DepositTest` → TMLD4-41 |
-| REQ-11 | [TMLD4-75](https://amali-tech.atlassian.net/browse/TMLD4-75) | Balance updated after a deposit | TC-043, TC-050 | OK | `DepositTest` → TMLD4-41 |
-| REQ-12 | [TMLD4-76](https://amali-tech.atlassian.net/browse/TMLD4-76) | Customer can enter a withdrawal amount | TC-057, TC-058 | NOK | — (browser validation) |
-| REQ-13 | [TMLD4-77](https://amali-tech.atlassian.net/browse/TMLD4-77) | Withdrawal validated (positive, sufficient balance) | TC-052 – TC-056 | NOK | `WithdrawTest` → TMLD4-50 |
-| REQ-14 | [TMLD4-78](https://amali-tech.atlassian.net/browse/TMLD4-78) | Balance updated after a withdrawal | TC-051, TC-059 | OK | `WithdrawTest` → TMLD4-50 |
-| REQ-15 | [TMLD4-79](https://amali-tech.atlassian.net/browse/TMLD4-79) | Customer cannot reset or alter transaction history | TC-041, TC-042 | NOK | `TransactionTest` → TMLD4-52 |
-| REQ-16 | [TMLD4-80](https://amali-tech.atlassian.net/browse/TMLD4-80) | Customer can log in and log out | TC-030 – TC-034 | NOK | `CustomerLoginTest` → TMLD4-54, TMLD4-57 |
-| REQ-17 | [TMLD4-81](https://amali-tech.atlassian.net/browse/TMLD4-81) | Only a bank manager can reach manager functions | TC-035 | NOK | — (manual) |
-| REQ-18 | [TMLD4-82](https://amali-tech.atlassian.net/browse/TMLD4-82) | Compatibility: Chrome, Edge, phone-size screen | TC-062, TC-063 | NOT RUN | — (manual) |
-| REQ-19 | [TMLD4-83](https://amali-tech.atlassian.net/browse/TMLD4-83) | Labels and messages correctly spelled and styled | TC-060, TC-061 | NOK | — (manual) |
+## 4. Test Coverage
 
-## 6. Test approach
+*The parts of the application that will be tested, taken from the two user stories in the lab brief.*
 
-| Level / type | How |
-| --- | --- |
-| Manual functional testing | 64 scripted test cases managed in Jira Xray (63 executed) — see [Section 3](../README.md#3-part-b--manual-testing) |
-| Automated UI regression | Selenium WebDriver 4 + TestNG, Page Object Model |
-| Data-driven testing | CSV files → TestNG `@DataProvider` (valid, boundary and negative values) |
-| Test design techniques | Equivalence partitioning (valid / invalid names, amounts), boundary values (0, 1, exact balance, balance + 1), state transition (customer → account → deleted) |
-| Smoke vs. regression | TestNG groups: `smoke`, `regression`, `known-defect` |
-| Reporting | Allure (steps, screenshots on failure, severity, features/stories, trends) |
-| CI | GitHub Actions: build Docker image → run suite against Selenium Grid container → Allure report artifact + GitHub Pages |
+| User                        | Area of the app      | What will be covered                                                                       |
+|-----------------------------|----------------------|--------------------------------------------------------------------------------------------|
+| Bank Manager (User Story 1) | Add Customer         | Adding new customers and validation of the customer form (names and post code)             |
+|                             | Open Account         | Creating accounts for customers already in the system, and access before an account exists |
+|                             | Customers / Delete   | Finding and deleting customer accounts, and access after deletion                          |
+| Customer (User Story 2)     | Login and Logout     | Customer access to their own accounts                                                      |
+|                             | Transactions         | Viewing recent transactions                                                                |
+|                             | Deposit              | Entering and validating deposit amounts, and balance update                                |
+|                             | Withdraw             | Entering and validating withdrawal amounts, sufficient balance, and balance update         |
+|                             | Transaction security | Customers cannot reset or alter their transaction history                                  |
 
-## 7. Test environment
+Coverage is tracked during test design: every acceptance criterion is linked to at least one test case in the traceability matrix.
 
-| Item | Value |
-| --- | --- |
-| URL | https://www.globalsqa.com/angularJs-protractor/BankingProject/ |
-| Browsers | Google Chrome 131 (64-bit) — primary; Microsoft Edge; phone-size viewport 375 × 667 (iPhone SE) |
-| OS / screen | Windows 11, 1920 × 1080 (manual and local runs); Ubuntu (GitHub Actions / Docker) |
-| Tools | Jira + Xray (test management, defects), Java 17, Maven 3.9, Selenium 4, TestNG 7, Allure 2, Docker, GitHub Actions, IntelliJ IDEA |
-| Test data | Pre-loaded customers (Harry Potter, Hermoine Granger, Ron Weasly, Albus Dumbledore, Neville Longbottom) + generated customers |
+## 5. Test Approach / Strategy
 
-## 8. Entry and exit criteria
+*HOW we will test – the levels, kinds of tests and methods used.*
 
-**Entry:** application URL reachable · user stories and acceptance criteria agreed · environment and tools installed · test data prepared.
+| Area              | Approach                                                                                                                                                                                                                                                                                                                                                                    | Meaning                                                                                                                |
+|-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
+| Test levels       | System testing of the whole web app, plus acceptance-style checks against each acceptance criterion                                                                                                                                                                                                                                                                         | How big a piece is tested at once. System testing means testing the whole website together                             |
+| Test types        | Functional (positive and negative), input validation, access and history security, UI and wording, compatibility, automated regression                                                                                                                                                                                                                                      | The kinds of checks: does it work, does it reject bad input, is it safe                                                |
+| Techniques        | Black-box requirement-based testing (at least one test per acceptance criterion); equivalence partitioning for names, post codes and amounts (letters, digits, special characters); boundary values for amounts (zero, smallest valid amount, exact balance, balance plus one); state transition (customer → account → deleted); exploratory sessions on history and access | Equivalence partitioning: one test per group of similar inputs. Boundary values: testing at the edges, where bugs hide |
+| Manual testing    | Test cases are designed from the requirements, stored in the test management tool, linked to their requirement and executed in a test execution cycle with a result, comment and screenshot per run                                                                                                                                                                         | A person runs each test and records what happened                                                                      |
+| Automation        | Java, Selenium WebDriver, TestNG and Maven. Page Object Model: one class per screen with locators and actions; tests contain only logic and assertions. Explicit waits only. A fresh browser per test so tests do not depend on each other. Data-driven tests read their inputs from CSV files, reusing the data designed for the manual tests                              | A program repeats the checks quickly; POM keeps the code easy to maintain when the screens change                      |
+| Test suites       | Smoke (a quick check of the core flows), Regression (the CI quality gate), Full (everything, including tests that track open defects)                                                                                                                                                                                                                                       | Groups of tests run for different purposes                                                                             |
+| Containers and CI | Automated tests run in a Docker container against a Selenium Grid browser container. A CI pipeline runs the suite on every change, nightly and on demand, then publishes the Allure report                                                                                                                                                                                  | The same environment everywhere, and results on every change                                                           |
+| Reporting         | Allure: steps per test, screenshot on failure, severity, links to tests and defects in the test management tool, failure categories, trend history                                                                                                                                                                                                                          | Clear results for engineers and non-technical readers                                                                  |
+| Risk analysis     | High: money moving without validation, history that can be changed, functions reachable without the right role. Medium: wrong balance after a transaction, invalid customer data stored. Low: wording and styling. High-risk areas are tested first and deepest                                                                                                             | Thinking ahead about what could go wrong, and testing the riskiest things first                                        |
 
-**Exit:** 100 % of planned test cases executed · 100 % of smoke and ≥ 95 % of regression tests passing · no open Critical/Blocker defect without an agreed decision · Allure report published · defects logged with steps, evidence and severity.
+### Project risks and mitigations
 
-**Suspension:** app unavailable or a Blocker defect prevents login for both roles. **Resumption:** fix deployed and smoke suite green.
+| Risk                                                                                    | Mitigation                                                                                                         |
+|-----------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
+| The public demo site is slow or unavailable                                             | Explicit waits; timeouts reported separately; re-run before logging a defect                                       |
+| Dynamic pages (AngularJS) re-render or load data late, causing unstable automated tests | Wait for page-specific conditions instead of fixed delays; investigate every unstable test before logging a defect |
+| Shared application data makes tests depend on each other                                | New browser session per test and unique generated test data                                                        |
+| Open defects make every CI run fail and hide new failures                               | Tests that track open defects are grouped separately, run in the Full suite and linked to their defect             |
+| Screens change and break locators                                                       | All locators kept in page objects, using stable attributes                                                         |
+| Limited time for one tester to cover manual and automated work                          | Risk-based prioritisation; automate the regression set first                                                       |
 
-## 9. Risks and mitigations
+## 6. Resources & Roles
 
-| Risk | Impact | Mitigation |
-| --- | --- | --- |
-| Public demo site down / slow | Tests fail for reasons unrelated to code | Explicit waits, retry in CI only on infrastructure errors, report categorises timeouts separately |
-| AngularJS re-renders forms (Deposit ↔ Withdrawl) | Flaky tests | Wait for the correct form label before typing |
-| Data shared between tests | Order-dependent results | New browser per test (fresh localStorage) + generated unique customers |
-| Known product defects break the CI gate | Pipeline always red | Defect-proving tests in `known-defect` group, run nightly (`full` suite), linked to the Jira bug with `@Issue` |
-| Locator changes | High maintenance | Locators centralised in page objects; stable `ng-click` / `ng-model` / `id` attributes |
+*WHO does what in the testing team.*
 
-## 10. Roles and responsibilities
+| Role                   | Responsibilities                                                          | Meaning                                             |
+|------------------------|---------------------------------------------------------------------------|-----------------------------------------------------|
+| Test lead              | Planning, estimation, monitoring, reporting                               | Plans and organises the testing                     |
+| QA engineer (manual)   | Test design, manual execution, defect logging and retesting               | Writes and runs the tests                           |
+| QA automation engineer | Automation framework, automated tests, Docker, CI pipeline, Allure report | Builds and maintains the automated checks           |
+| Development team       | Fixes defects, triages them with QA                                       | Builds the app and fixes bugs                       |
+| Product owner          | Reviews scope, prioritises defects, accepts the final report              | Decides what the app must do and accepts the result |
 
-| Role | Responsibility |
-| --- | --- |
-| QA Engineer (Annick) | Test plan, manual testing, automation framework, CI/CD, reporting |
-| Trainer / Reviewer | Review plan and code, sign-off |
-| Product Owner | Clarify acceptance criteria, prioritise defects |
+## 7. Test Environment & Test Data
 
-## 11. Schedule
+*WHERE testing happens – the computer, browser, website and example data used.*
 
-| Phase | Effort |
-| --- | --- |
-| Requirement analysis & test plan | 0.5 day |
-| Manual test design & execution | 1 day |
-| Framework set-up (Maven, POM, config, data) | 1 day |
-| Automated tests | 1.5 days |
-| Docker + GitHub Actions + Allure | 1 day |
-| Defect reporting, review, final report | 0.5 day |
+| Item          | Detail                                                                                                                                                                                                                                                                                             | Meaning                                        |
+|---------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------|
+| Hardware / OS | Desktop PC with Windows (manual and local automated runs); Linux runners for the CI pipeline                                                                                                                                                                                                       | The computer and its operating system          |
+| Browsers      | Google Chrome, latest stable (primary); Microsoft Edge; browser device mode for a phone-size screen; Chrome in a Selenium Grid container for CI                                                                                                                                                    | The programs used to open the website          |
+| Network / URL | Public internet; https://www.globalsqa.com/angularJs-protractor/BankingProject/#/login                                                                                                                                                                                                             | The internet connection and web address        |
+| Test data     | Customers pre-loaded in the demo app; new customers created during testing; valid and invalid names (letters, digits, special characters); valid and invalid post codes; amounts covering valid, zero, negative, decimal and boundary values. The full data per test is defined during test design | The example information typed into the website |
+| Data reset    | The app keeps its data in the browser, so a new browser session starts from the pre-loaded data                                                                                                                                                                                                    | Tests do not affect each other                 |
 
-## 12. Deliverables
+## 8. Tools
 
-Test plan (this document) · manual test cases & execution results · defect reports · automation source code (GitHub) · Dockerfile & docker-compose · GitHub Actions workflow · Allure report.
+*The software used to organise and carry out the testing.*
 
-## 13. Defect management
+- **Test management:** Jira with Xray (requirements, test cases, test sets, test plan, test execution, defects, traceability reports); Excel workbook as a companion copy
+- **Automation:** Java, Maven, Selenium WebDriver, TestNG, CSV test data files
+- **Reporting:** Allure Report
+- **Containers and CI:** Docker, Docker Compose, Selenium Grid browser image, GitHub Actions
+- **Supporting tools:** code editor, Git and GitHub, browser developer tools, screenshots for evidence
 
-| Severity | Meaning |
-| --- | --- |
-| Blocker | Core flow impossible (e.g. nobody can log in) |
-| Critical | Security or data-integrity failure (e.g. unauthenticated access, history deleted) |
-| High | Required function missing or destructive behaviour |
-| Medium | Acceptance criterion violated, workaround exists |
-| Low | Cosmetic or feedback issue, no money moves |
+## 9. Schedule & Estimation (Sprints)
 
-Defects are logged in Jira (project TMLD4) with: ID, description, steps, expected vs. actual, environment, severity and priority (each with a reason), linked test case and requirement, and screenshot evidence.
+*WHEN each activity happens and how long it should take. Estimation is a careful guess of the time needed; a sprint is a short, fixed block of work time (here, one week).*
 
-## Approval
+Testing is planned in three one-week sprints (3 weeks in total), starting once this plan is approved. Work is sized in story points (1 = very small, 8 = large).
 
-| Role | Name | Date |
-| --- | --- | --- |
-| Prepared by | Annick Ujeneza | 22 Nov 2026 |
-| Reviewed and approved by | Trainer | |
+| Sprint            | Sprint goal                       | Work in the sprint                                                                                                                                          | Story points |
+|-------------------|-----------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
+| Sprint 1 (week 1) | Design and run manual tests       | Review requirements and risks; design test cases and link them to requirements; prepare test data; execute the manual test cycle; log defects with evidence | 13           |
+| Sprint 2 (week 2) | Build the automation framework    | Project set-up, Page Object Model, configuration, data-driven tests for both user stories, Allure integration                                               | 13           |
+| Sprint 3 (week 3) | Containers, CI, retest and report | Docker set-up, CI pipeline, published Allure report, stabilise automated tests, retest fixed defects, test summary report                                   | 8            |
+| **Total**         |                                   |                                                                                                                                                             | **34**       |
+
+Estimation method: each piece of work is sized in story points relative to the others. Automation and CI are larger because they include set-up and stabilisation. Retesting depends on when fixes are delivered, so Sprint 3 can move.
+
+## 10. Entry, Suspension & Exit Criteria
+
+*The rules for when testing can START, when it should PAUSE and CONTINUE, and when it is FINISHED.*
+
+**Entry criteria – testing can start when:**
+
+- This test plan is approved
+- User stories and acceptance criteria are available and split into requirements
+- The application URL is reachable
+- Test cases are written, reviewed and linked to requirements
+- Test data and tools are ready
+
+**Suspension criteria – pause testing when:** the site is down, or a blocking defect stops a whole user story (for example, nobody can log in).
+
+**Resumption criteria – continue testing when:** the site is back, or the blocking defect is fixed and the smoke suite passes again.
+
+**Exit criteria – testing is complete when:**
+
+- 100% of planned in-scope test cases are executed and every requirement shows coverage in the traceability matrix
+- Every failed test is linked to a logged defect
+- The automated smoke and regression suites pass in Docker and in the CI pipeline
+- No Critical defect is open without a decision from the product owner
+- The Allure report is published and the test summary report is shared
+
+## 11. Defect Management
+
+*How bugs are recorded, followed up and closed. A defect (bug) is something that does not work as it should.*
+
+Bug life cycle – the stages a bug goes through:
+
+1.  **New** – the tester finds the bug and logs it, linked to the test run, test case and requirement
+2.  **Assigned** – the bug is confirmed and given to a developer
+3.  **In Progress / Fixed** – the developer works on it and fixes it
+4.  **Retest** – the tester checks the fix, manually and with the automated test
+5.  **Closed** – the fix works, or **Reopened** if it does not
+
+| Severity – how BAD the problem is | Meaning                                                               |
+|-----------------------------------|-----------------------------------------------------------------------|
+| Critical                          | Security or data-integrity failure with no workaround                 |
+| High                              | A main feature is missing, broken or destructive                      |
+| Medium                            | A rule is broken or invalid data is accepted, but a workaround exists |
+| Low                               | Cosmetic or feedback issue; no money moves                            |
+
+| Priority – how SOON it should be fixed | Meaning                 |
+|----------------------------------------|-------------------------|
+| Highest                                | Fix immediately         |
+| High                                   | Fix before release      |
+| Medium                                 | Fix in the next release |
+| Low                                    | Fix when possible       |
+
+## 12. Deliverables, Monitoring & Approvals
+
+*The documents produced, how progress is checked, and who signs the plan off.*
+
+| When           | Deliverable                                                                                                                                                          |
+|----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Before testing | Test Plan (this document)                                                                                                                                            |
+| During testing | Test cases with results, requirement traceability matrix, defect log and evidence screenshots; automation source code, test data files, Docker files and CI pipeline |
+| After testing  | Requirement and defect traceability reports; published Allure report; test summary report                                                                            |
+
+**Monitoring & control** – checking progress against the plan and fixing course when it goes off track. The test management tool shows executed, passed and failed tests per requirement; the CI pipeline and the Allure trend show automated results on every change. Progress is compared weekly with the schedule; if testing falls behind, high-risk tests are done first or the plan is adjusted with the product owner.
+
+**Approvals**
+
+| Role                       | Signature | Date |
+|----------------------------|-----------|------|
+| Prepared by: QA Engineer   |           |      |
+| Reviewed by: Test Lead     |           |      |
+| Approved by: Product Owner |           |      |
+
+## 13. Glossary
+
+*Short meanings of the testing words used in this plan.*
+
+| Term                        | Meaning                                                                                               |
+|-----------------------------|-------------------------------------------------------------------------------------------------------|
+| Acceptance criteria         | The checklist that says a user story is done correctly                                                |
+| Allure report               | An HTML test report showing results, steps, screenshots and trends                                    |
+| Black-box testing           | Testing like a user, without looking inside the code                                                  |
+| Boundary value              | A value at the edge of what is allowed, e.g. withdrawing exactly the balance                          |
+| CI (Continuous Integration) | Running the tests automatically every time code is changed                                            |
+| Data-driven test            | One test that runs once for each row of data in a file                                                |
+| Defect / Bug                | Something that does not work the way it should                                                        |
+| Docker container            | A small, isolated package that runs software the same way on any computer                             |
+| Entry / Exit criteria       | Conditions to start testing / rules that say testing is finished                                      |
+| Equivalence partitioning    | Grouping similar inputs and testing one from each group                                               |
+| Jira / Xray                 | Jira is a work-tracking tool; Xray is a Jira app for managing test cases, executions and traceability |
+| Page Object Model (POM)     | A design where each screen has one class holding its locators and actions                             |
+| Regression testing          | Re-running tests after a change to make sure nothing else broke                                       |
+| RTM                         | Requirement Traceability Matrix: links each requirement to its tests, results and bugs                |
+| Selenium WebDriver          | A tool that controls a real browser from code                                                         |
+| Severity / Priority         | How bad a bug is / how soon it should be fixed                                                        |
+| Test case / Test data       | A step-by-step check with its expected result / the example values used in it                         |
+| User story                  | A short description of what a user wants to do and why                                                |
